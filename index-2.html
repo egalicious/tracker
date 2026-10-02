@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>October Plan Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14213D">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #F3F5F9;
+  --card: #FFFFFF;
+  --ink: #14213D;
+  --sub: #5B6577;
+  --faint: #9AA3B3;
+  --line: #D9DEE7;
+  --blue: #2E5BBA;
+  --blue-ink: #FFFFFF;
+  --blue-sub: #DCE6FA;
+  --gold: #E9A23B;
+  --gold-bg: #FFFBF2;
+  --danger: #B3261E;
+  --scrim: rgba(20, 33, 61, 0.45);
+  --sel-bg: #14213D;
+  --sel-ink: #FFFFFF;
+  --field: #F3F5F9;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101827; --card: #18223A; --ink: #E6EBF5; --sub: #A1ABBE; --faint: #6D7890;
+    --line: #2A3550; --blue: #6E95EA; --blue-ink: #0E1626; --blue-sub: #22335A;
+    --gold: #F0B24F; --gold-bg: #1E2436; --danger: #F08A80; --scrim: rgba(0, 0, 0, 0.6);
+    --sel-bg: #E6EBF5; --sel-ink: #101827; --field: #101827; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101827; --card: #18223A; --ink: #E6EBF5; --sub: #A1ABBE; --faint: #6D7890;
+  --line: #2A3550; --blue: #6E95EA; --blue-ink: #0E1626; --blue-sub: #22335A;
+  --gold: #F0B24F; --gold-bg: #1E2436; --danger: #F08A80; --scrim: rgba(0, 0, 0, 0.6);
+  --sel-bg: #E6EBF5; --sel-ink: #101827; --field: #101827; color-scheme: dark;
+}
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+main { max-width: 560px; margin: 0 auto; padding: 14px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+.head { padding: 4px 0 14px; }
+.head h1 { margin: 0; font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; }
+.head p { margin: 4px 0 0; font-size: 15px; color: var(--sub); }
+
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 6px; }
+.gh { text-align: center; font-size: 12px; font-weight: 600; color: var(--sub); padding: 6px 0; }
+.cell { display: flex; flex-direction: column; align-items: center; border-radius: 9px; padding: 5px 0 7px; min-height: 60px; border: 1.5px solid transparent; }
+.cell .n { font-size: 15px; font-weight: 700; }
+.cell .c { font-size: 10.5px; font-weight: 600; color: var(--blue); margin-top: 1px; }
+.cell .c.rest { color: var(--faint); }
+.cell.off .n { color: var(--faint); font-weight: 400; }
+.cell.today { border-color: var(--blue); }
+.cell.sel { background: var(--sel-bg); border-color: var(--sel-bg); }
+.cell.sel .n, .cell.sel .c { color: var(--sel-ink); }
+.meter { margin-top: 6px; width: 70%; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.cell.sel .meter { background: color-mix(in srgb, var(--sel-ink) 25%, transparent); }
+.meter i { display: block; height: 100%; border-radius: 2px; background: var(--blue); }
+.meter i.full { background: var(--gold); }
+
+.today-link { margin-top: 10px; color: var(--blue); font-size: 15px; font-weight: 600; padding: 6px 2px; }
+
+.dayhead { margin: 20px 0 10px; }
+.dayhead .date { font-size: 14px; font-weight: 600; color: var(--sub); }
+.dayhead h2 { margin: 2px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -0.01em; }
+.dayhead p { margin: 6px 0 0; font-size: 15px; line-height: 1.45; }
+.dayhead b { font-weight: 700; }
+
+.item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.item.done { border-color: var(--gold); background: var(--gold-bg); }
+.item-top { display: flex; gap: 12px; align-items: flex-start; }
+.box { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 2px solid var(--ink); display: grid; place-items: center; margin-top: 1px; color: #fff; font-size: 18px; font-weight: 900; line-height: 1; }
+.box.locked { border-color: var(--line); background: var(--bg); }
+.box.done { background: var(--gold); border-color: var(--gold); color: #fff; }
+.item-text { flex: 1; min-width: 0; }
+.item-text h3 { margin: 0; font-size: 17px; font-weight: 700; }
+.item.done h3 { color: var(--sub); }
+.item-text .meta { margin: 2px 0 0; font-size: 14px; line-height: 1.35; color: var(--sub); }
+.item-text .left { margin: 4px 0 0; font-size: 13px; font-weight: 600; color: var(--blue); }
+
+.sets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.sets.rounds { grid-template-columns: repeat(6, 1fr); }
+.pill { text-align: left; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--card); min-height: 52px; }
+.rounds .pill { text-align: center; padding: 8px 0; min-height: 44px; }
+.pill .pl { display: block; font-size: 12px; font-weight: 700; color: var(--sub); }
+.pill .pv { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rounds .pill .pl { font-size: 14px; }
+.pill.done { background: var(--blue); border-color: var(--blue); }
+.pill.done .pl { color: color-mix(in srgb, var(--blue-ink) 75%, transparent); }
+.pill.done .pv { color: var(--blue-ink); }
+.rounds .pill.done .pl { color: var(--blue-ink); }
+
+.hist { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.hist h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+.hrow { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.4; }
+.hrow .d { flex: none; width: 88px; color: var(--sub); font-weight: 600; }
+.empty { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.empty h3 { margin: 0; font-size: 17px; }
+.empty p { margin: 4px 0 0; color: var(--sub); font-size: 15px; line-height: 1.45; }
+.note { color: var(--sub); font-size: 14px; line-height: 1.45; margin: 18px 2px 0; }
+.erase { display: block; margin: 18px auto 0; color: var(--danger); font-size: 15px; font-weight: 600; padding: 8px; }
+
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card); border-top: 1px solid var(--line); padding: 6px 0 calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4px 0; font-size: 15px; font-weight: 600; color: var(--sub); }
+.tab::before { content: ""; width: 28px; height: 4px; border-radius: 2px; margin-bottom: 6px; background: transparent; }
+.tab[aria-selected="true"] { color: var(--ink); font-weight: 800; }
+.tab[aria-selected="true"]::before { background: var(--blue); }
+
+.overlay { position: fixed; inset: 0; background: var(--scrim); z-index: 20; display: none; }
+.overlay.open { display: block; }
+.dialog { position: fixed; z-index: 21; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 14px); max-width: 520px; margin: 0 auto; background: var(--card); border-radius: 20px; padding: 20px; display: none; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25); }
+.dialog.open { display: block; }
+.dialog h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.dialog .sub { margin: 4px 0 0; font-size: 15px; color: var(--sub); }
+.dialog .last { margin: 10px 0 0; font-size: 15px; font-weight: 600; color: var(--blue); }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.fields label { display: block; font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 6px; }
+.fields input { width: 100%; border: 1.5px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 26px; font-weight: 700; color: var(--ink); background: var(--field); font-variant-numeric: tabular-nums; }
+.fields input::placeholder { color: var(--faint); font-weight: 600; }
+.seg { display: flex; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 3px; background: var(--field); }
+.seg button { flex: 1; padding: 7px 0; border-radius: 8px; font-size: 15px; font-weight: 700; color: var(--sub); }
+.seg button[aria-checked="true"] { background: var(--sel-bg); color: var(--sel-ink); }
+.error { margin: 12px 0 0; color: var(--danger); font-size: 14px; font-weight: 600; min-height: 0; }
+.actions { display: flex; gap: 10px; margin-top: 18px; }
+.btn2 { flex: 1; padding: 14px 0; border-radius: 12px; border: 1.5px solid var(--line); font-size: 16px; font-weight: 700; }
+.btn1 { flex: 2; padding: 14px 0; border-radius: 12px; background: var(--blue); color: var(--blue-ink); font-size: 16px; font-weight: 800; }
+.btn1.danger { background: var(--danger); color: #fff; }
+.uncheck { display: block; margin: 14px auto 0; color: var(--danger); font-size: 15px; font-weight: 600; padding: 6px; }
+
+.toast { position: fixed; z-index: 30; left: 16px; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); max-width: 520px; margin: 0 auto; background: var(--sel-bg); color: var(--sel-ink); border-radius: 12px; padding: 12px 14px; font-size: 15px; line-height: 1.4; opacity: 0; transform: translateY(8px); transition: opacity .18s, transform .18s; pointer-events: none; }
+.toast.show { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<main id="main" aria-live="polite"></main>
+
+<nav class="tabbar" role="tablist" aria-label="Sections">
+  <button class="tab" role="tab" data-act="tab" data-tab="calendar" aria-selected="true">Calendar</button>
+  <button class="tab" role="tab" data-act="tab" data-tab="history" aria-selected="false">History</button>
+</nav>
+
+<div class="overlay" id="overlay" data-act="close"></div>
+<div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var LS_KEY = 'oct-2026-plan-tracker-v1';
+
+  /* ---------- Plan ---------- */
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function keyFor(d) { return '2026-10-' + pad(d); }
+  var WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  var WDS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  function lift(id, name, target, rest, opts) {
+    var o = { id: id, name: name, sets: 5, target: target, rest: rest, kind: 'lift', unit: 'reps', weighted: true };
+    if (opts) for (var k in opts) o[k] = opts[k];
+    return o;
+  }
+  function task(id, name, sets, target, kind) {
+    return { id: id, name: name, sets: sets, target: target, rest: null, kind: kind, unit: null, weighted: false };
+  }
+
+  var WORKOUTS = {
+    UA: { title: 'Upper A', items: [
+      lift('floor-press', 'Dumbbell floor press', '8–12 reps', '2–3 min'),
+      lift('one-arm-row', 'One-arm dumbbell row', '8–12 reps each side', '2 min'),
+      lift('overhead-press', 'Standing overhead press', '8–12 reps', '2–3 min'),
+      lift('push-ups', 'Push-ups', '1–2 reps short of failure', '2 min', { weighted: false }),
+      lift('db-curl', 'Dumbbell curl', '10–15 reps', '1–2 min'),
+      lift('oh-triceps', 'Overhead triceps extension', '10–15 reps', '1–2 min')
+    ] },
+    LA: { title: 'Lower A', items: [
+      lift('goblet-squat', 'Goblet squat', '8–15 reps', '2–3 min'),
+      lift('rdl', 'Romanian deadlift', '8–12 reps', '2–3 min'),
+      lift('split-squat', 'Bulgarian split squat', '8–12 reps each leg', '2 min'),
+      lift('calf-raise', 'Single-leg calf raise', '10–20 reps each leg', '1 min'),
+      lift('plank', 'Plank', '30–60 sec', '1 min', { unit: 'sec', weighted: false })
+    ] },
+    UB: { title: 'Upper B', items: [
+      lift('push-ups', 'Push-ups', '1–2 reps short of failure', '2 min', { weighted: false }),
+      lift('bent-row', 'Bent-over row', '8–12 reps', '2 min'),
+      lift('floor-fly', 'Dumbbell floor fly', '10–15 reps', '1–2 min'),
+      lift('pullover', 'Dumbbell pullover', '10–15 reps', '1–2 min'),
+      lift('lateral-raise', 'Lateral raise', '12–20 reps', '1–2 min'),
+      lift('rear-fly', 'Bent-over rear-delt fly', '12–20 reps', '1 min'),
+      lift('hammer-curl', 'Hammer curl', '10–15 reps', '1–2 min'),
+      lift('skull-crusher', 'Lying skull crusher', '10–15 reps', '1–2 min')
+    ] },
+    LB: { title: 'Lower B', items: [
+      lift('reverse-lunge', 'Reverse lunge', '8–12 reps each leg', '2 min'),
+      lift('sl-rdl', 'Single-leg Romanian deadlift', '8–12 reps each leg', '2 min'),
+      lift('hip-thrust', 'Dumbbell hip thrust', '10–15 reps', '2 min'),
+      lift('paused-goblet', 'Paused goblet squat', '10–15 reps', '2 min'),
+      lift('calf-raise', 'Single-leg calf raise', '10–20 reps each leg', '1 min'),
+      lift('leg-raise', 'Lying leg raise', '10–15 reps', '1 min', { weighted: false })
+    ] }
+  };
+
+  function weekFor(d) {
+    // Boxing HIIT: 1 min hard / 1 min rest. 30 min (15 rounds) through Oct 18, then 1 hour (30 rounds).
+    var box = d <= 18 ? { rounds: 15, minutes: 30 } : { rounds: 30, minutes: 60 };
+    if (d <= 4) return { label: 'Kickoff', effort: 'Find your starting weights. Stop 2–3 reps short of failure.', box: box };
+    if (d <= 11) return { label: 'Week 1', effort: 'Learn the movements. Stop 2–3 reps short of failure.', box: box };
+    if (d <= 18) return { label: 'Week 2', effort: 'Stop 1–2 reps short of failure and start adding reps or weight.', box: box };
+    if (d <= 25) return { label: 'Week 3', effort: 'Stop 1–2 reps short of failure and keep adding reps or weight.', box: box };
+    return { label: 'Week 4', effort: 'Take the last set of each exercise to 0–1 reps short of failure.', box: box };
+  }
+
+  // Friday is the rest day. Boxing HIIT on Wednesday and Sunday.
+  // Each boxing day is followed by a lower day, so shoulders get 2 days before the next upper session.
+  var KICKOFF = { 2: 'REST', 3: 'UB', 4: 'BOX' };
+  var BY_WD = { 0: 'BOX', 1: 'LA', 2: 'UA', 3: 'BOX', 4: 'LB', 5: 'REST', 6: 'UB' };
+  var SHORT = { UA: 'Up A', LA: 'Lo A', UB: 'Up B', LB: 'Lo B', BOX: 'Box', REST: 'Rest' };
+
+  function buildDay(d) {
+    var wd = new Date(2026, 9, d).getDay();
+    var code = d <= 4 ? KICKOFF[d] : BY_WD[wd];
+    var wk = weekFor(d);
+    var title, note, items = [];
+    if (WORKOUTS[code]) {
+      title = WORKOUTS[code].title;
+      note = wk.effort;
+      items = [task('warm-up', 'Warm-up: easy boxing', 1, '5–10 min at a pace you could talk at, no hard flurries. Then 1–2 light sets of the first exercise.', 'check')]
+        .concat(WORKOUTS[code].items.map(function (it) { return Object.assign({}, it); }));
+    } else if (code === 'BOX') {
+      title = 'Boxing HIIT';
+      note = 'Warm up for 5 minutes, then alternate 1 minute hard and 1 minute easy. Hard means you could only say a few words.' +
+        (wk.box.minutes === 60 ? ' Sessions are 1 hour from Oct 19.' : '');
+      items = [task('box-intervals', 'Thrill of the Fight 2 rounds', wk.box.rounds, '1 min hard, 1 min rest, ' + wk.box.minutes + ' min total', 'round')];
+    } else {
+      title = 'Rest';
+      note = 'Recovery day. Just the walk.';
+    }
+    if (d === 2) items.unshift(task('check-in', 'Check-in: body weight, waist, photo', 1, 'Your baseline for Oct 30', 'check'));
+    if (d === 30) items.push(task('check-in', 'Check-in: body weight, waist, photo', 1, 'Compare with Oct 2', 'check'));
+    items.push(task('walk', 'Walk', 1, '20–30 min, ideally after a meal', 'check'));
+    return { d: d, key: keyFor(d), weekday: WD[wd], weekdayShort: WDS[wd], code: code, short: SHORT[code], title: title, note: note, week: wk.label, items: items };
+  }
+
+  var PLAN = [];
+  for (var dd = 2; dd <= 30; dd++) PLAN.push(buildDay(dd));
+  var PLAN_BY_KEY = {};
+  PLAN.forEach(function (p) { PLAN_BY_KEY[p.key] = p; });
+
+  /* ---------- State ---------- */
+  function defaultKey() {
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+    if (y < 2026 || (y === 2026 && (m < 9 || (m === 9 && d < 2)))) return keyFor(2);
+    if (y === 2026 && m === 9 && d <= 30) return keyFor(d);
+    return keyFor(30);
+  }
+  function todayKey() {
+    var now = new Date();
+    if (now.getFullYear() === 2026 && now.getMonth() === 9) {
+      var k = keyFor(now.getDate());
+      return PLAN_BY_KEY[k] ? k : null;
+    }
+    return null;
+  }
+
+  var state = {
+    logs: {},            // { [dayKey]: { updatedAt, items: { [itemId]: { sets: [...], done } } } }
+    lastUnit: 'lbs',
+    unitUpdatedAt: 0,
+    tab: 'calendar',
+    selected: defaultKey(),
+    synced: false
+  };
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      var p = JSON.parse(raw);
+      if (p && p.logs && typeof p.logs === 'object') state.logs = p.logs;
+      if (p && (p.lastUnit === 'lbs' || p.lastUnit === 'kg')) state.lastUnit = p.lastUnit;
+      if (p && typeof p.unitUpdatedAt === 'number') state.unitUpdatedAt = p.unitUpdatedAt;
+    } catch (e) { /* storage unavailable or unreadable: start empty */ }
+  }
+  function saveLocal() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ logs: state.logs, lastUnit: state.lastUnit, unitUpdatedAt: state.unitUpdatedAt }));
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function readEntry(dayKey, item) {
+    var day = state.logs[dayKey];
+    var raw = day && day.items && day.items[item.id];
+    var sets = [];
+    for (var i = 0; i < item.sets; i++) sets.push((raw && raw.sets && raw.sets[i]) || { done: false });
+    var done = !!(raw && raw.done) && sets.every(function (s) { return s.done; });
+    return { sets: sets, done: done };
+  }
+  function dayProgress(day) {
+    var done = 0;
+    day.items.forEach(function (it) { if (readEntry(day.key, it).done) done++; });
+    return { done: done, total: day.items.length };
+  }
+  function lastPerformance(beforeKey, itemId, idx) {
+    for (var i = PLAN.length - 1; i >= 0; i--) {
+      var k = PLAN[i].key;
+      if (k >= beforeKey) continue;
+      var raw = state.logs[k] && state.logs[k].items && state.logs[k].items[itemId];
+      var done = raw && raw.sets ? raw.sets.filter(function (s) { return s && s.done && s.reps != null; }) : [];
+      if (done.length) {
+        var exact = raw.sets[idx];
+        var s = exact && exact.done && exact.reps != null ? exact : done[done.length - 1];
+        return { key: k, reps: s.reps, weight: s.weight, unit: s.unit };
+      }
+    }
+    return null;
+  }
+
+  function mutate(dayKey, item, fn) {
+    var day = state.logs[dayKey] || { updatedAt: 0, items: {} };
+    var cur = readEntry(dayKey, item);
+    var next = fn({ sets: cur.sets.map(function (s) { return Object.assign({}, s); }), done: cur.done });
+    var items = Object.assign({}, day.items || {});
+    items[item.id] = next;
+    state.logs[dayKey] = { updatedAt: Date.now(), items: items };
+    saveLocal();
+    schedulePush(dayKey);
+    render();
+  }
+
+  /* ---------- Formatting ---------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+  function fmtSet(s, item) {
+    var amount = item.unit === 'sec' ? s.reps + ' s' : String(s.reps);
+    if (!s.weight) return item.unit === 'sec' ? amount : s.reps + ' reps';
+    return amount + ' × ' + s.weight + ' ' + s.unit;
+  }
+  function fmtDay(key) {
+    var d = PLAN_BY_KEY[key];
+    return d ? d.weekdayShort + ', Oct ' + d.d : key;
+  }
+  function describe(item) {
+    if (item.kind === 'lift') return item.sets + ' sets, ' + item.target + ', rest ' + item.rest;
+    if (item.kind === 'round') return item.sets + ' rounds, ' + item.target;
+    return item.target;
+  }
+  function noun(item, n) {
+    if (item.kind === 'round') return n === 1 ? 'round' : 'rounds';
+    return n === 1 ? 'set' : 'sets';
+  }
+
+  /* ---------- Rendering ---------- */
+  var mainEl = document.getElementById('main');
+
+  function render() {
+    mainEl.innerHTML = state.tab === 'calendar' ? calendarHTML() : historyHTML();
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.setAttribute('aria-selected', String(t.getAttribute('data-tab') === state.tab));
+    });
+  }
+
+  function calendarHTML() {
+    var complete = PLAN.filter(function (p) { var g = dayProgress(p); return g.done === g.total; }).length;
+    var today = todayKey();
+    var h = '<header class="head"><h1>October 2026</h1><p>' + complete + ' of ' + PLAN.length + ' days complete</p></header>';
+    h += '<div class="grid">';
+    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function (w) { h += '<div class="gh" aria-hidden="true">' + w + '</div>'; });
+    var lead = (new Date(2026, 9, 1).getDay() + 6) % 7;
+    for (var b = 0; b < lead; b++) h += '<div></div>';
+    for (var d = 1; d <= 31; d++) {
+      var day = PLAN_BY_KEY[keyFor(d)];
+      if (!day) { h += '<div class="cell off" aria-hidden="true"><span class="n">' + d + '</span></div>'; continue; }
+      var g = dayProgress(day);
+      var pct = Math.round((g.done / g.total) * 100);
+      var cls = 'cell' + (day.key === state.selected ? ' sel' : '') + (day.key === today ? ' today' : '');
+      h += '<button class="' + cls + '" data-act="select" data-key="' + day.key + '" aria-pressed="' + (day.key === state.selected) + '" aria-label="' +
+        esc(day.weekday + ' October ' + d + ', ' + day.title + ', ' + g.done + ' of ' + g.total + ' done') + '">' +
+        '<span class="n">' + d + '</span><span class="c' + (day.code === 'REST' ? ' rest' : '') + '">' + day.short + '</span>' +
+        '<span class="meter"><i class="' + (g.done === g.total ? 'full' : '') + '" style="width:' + pct + '%"></i></span></button>';
+    }
+    h += '</div>';
+    if (today && today !== state.selected) h += '<button class="today-link" data-act="select" data-key="' + today + '">Go to today</button>';
+
+    var sel = PLAN_BY_KEY[state.selected];
+    if (sel) {
+      h += '<section class="dayhead"><div class="date">' + sel.weekday + ', October ' + sel.d + '</div><h2>' + esc(sel.title) + '</h2>' +
+        '<p><b>' + sel.week + '.</b> ' + esc(sel.note) + '</p></section>';
+      sel.items.forEach(function (item) { h += itemHTML(sel, item); });
+    }
+    return h;
+  }
+
+  function itemHTML(day, item) {
+    var e = readEntry(day.key, item);
+    var open = e.sets.filter(function (s) { return !s.done; }).length;
+    var locked = item.kind !== 'check' && open > 0;
+    var label = item.name + (locked ? ', ' + open + ' ' + noun(item, open) + ' left' : '');
+    var h = '<section class="item' + (e.done ? ' done' : '') + '"><div class="item-top">' +
+      '<button class="box' + (locked ? ' locked' : '') + (e.done ? ' done' : '') + '" role="checkbox" aria-checked="' + e.done + '" aria-disabled="' + locked + '" aria-label="' + esc(label) + '" data-act="item" data-item="' + item.id + '">' + (e.done ? '✓' : '') + '</button>' +
+      '<div class="item-text"><h3>' + esc(item.name) + '</h3><p class="meta">' + esc(describe(item)) + '</p>' +
+      (locked && open < item.sets ? '<p class="left">' + open + ' ' + noun(item, open) + ' left</p>' : '') + '</div></div>';
+    if (item.kind !== 'check') {
+      h += '<div class="sets' + (item.kind === 'round' ? ' rounds' : '') + '">';
+      e.sets.forEach(function (s, i) {
+        var lab = item.kind === 'round' ? String(i + 1) : 'Set ' + (i + 1);
+        var aria = (item.kind === 'round' ? 'Round ' : 'Set ') + (i + 1) + (s.done && item.kind === 'lift' ? ', ' + fmtSet(s, item) : '');
+        h += '<button class="pill' + (s.done ? ' done' : '') + '" role="checkbox" aria-checked="' + !!s.done + '" aria-label="' + esc(aria) + '" data-act="set" data-item="' + item.id + '" data-idx="' + i + '">' +
+          '<span class="pl">' + lab + '</span>' +
+          (item.kind === 'lift' ? '<span class="pv">' + (s.done ? esc(fmtSet(s, item)) : 'Tap to log') + '</span>' : '') +
+          '</button>';
+      });
+      h += '</div>';
+    }
+    return h + '</section>';
+  }
+
+  function historyHTML() {
+    var groups = [], byId = {};
+    for (var i = PLAN.length - 1; i >= 0; i--) {
+      var day = PLAN[i];
+      day.items.forEach(function (item) {
+        if (item.kind !== 'lift') return;
+        var raw = state.logs[day.key] && state.logs[day.key].items && state.logs[day.key].items[item.id];
+        var sets = raw && raw.sets ? raw.sets.filter(function (s) { return s && s.done && s.reps != null; }) : [];
+        if (!sets.length) return;
+        if (!byId[item.id]) { byId[item.id] = { item: item, sessions: [] }; groups.push(byId[item.id]); }
+        byId[item.id].sessions.push({ key: day.key, sets: sets });
+      });
+    }
+    var h = '<header class="head"><h1>History</h1><p>Every logged set, newest first. Beat these numbers next session.</p></header>';
+    if (!groups.length) {
+      h += '<div class="empty"><h3>Nothing logged yet</h3><p>Open the Calendar tab, pick a day, and tap a set to log your reps and weight.</p></div>';
+    } else {
+      groups.forEach(function (g) {
+        h += '<section class="hist"><h3>' + esc(g.item.name) + '</h3>';
+        g.sessions.forEach(function (s) {
+          h += '<div class="hrow"><span class="d">' + fmtDay(s.key) + '</span><span>' + esc(s.sets.map(function (x) { return fmtSet(x, g.item); }).join(',  ')) + '</span></div>';
+        });
+        h += '</section>';
+      });
+    }
+    h += '<p class="note">Your log is saved on this phone. Uninstalling the app or clearing Chrome\'s data for this site deletes it.</p>';
+    h += '<button class="erase" data-act="erase">Erase all logged data</button>';
+    return h;
+  }
+
+  /* ---------- Dialogs ---------- */
+  var overlay = document.getElementById('overlay');
+  var dialog = document.getElementById('dialog');
+  var prompt = null; // { dayKey, item, idx, existing, last, unit }
+
+  function openDialog(html) {
+    dialog.innerHTML = html;
+    overlay.classList.add('open');
+    dialog.classList.add('open');
+  }
+  function closeDialog() {
+    overlay.classList.remove('open');
+    dialog.classList.remove('open');
+    dialog.innerHTML = '';
+    prompt = null;
+  }
+
+  function openSetPrompt(day, item, idx) {
+    var e = readEntry(day.key, item);
+    var existing = e.sets[idx].done ? e.sets[idx] : null;
+    var last = lastPerformance(day.key, item.id, idx);
+    var prev = null;
+    for (var j = idx - 1; j >= 0; j--) { if (e.sets[j].done && e.sets[j].reps != null) { prev = e.sets[j]; break; } }
+    var source = prev || last;
+    var unit = (existing && existing.unit) || (source && source.unit) || state.lastUnit;
+    var reps = existing ? String(existing.reps) : '';
+    var weight = existing ? (existing.weight ? String(existing.weight) : '') : (source && source.weight ? String(source.weight) : '');
+    prompt = { dayKey: day.key, item: item, idx: idx, existing: existing, unit: unit };
+    var isSec = item.unit === 'sec';
+    openDialog(
+      '<h2 id="dlg-title">' + esc(item.name) + '</h2>' +
+      '<p class="sub">Set ' + (idx + 1) + ' of ' + item.sets + '. Target ' + esc(item.target) + '.</p>' +
+      '<p class="last">' + (last ? 'Last time, ' + fmtDay(last.key) + ': ' + esc(fmtSet(last, item)) : 'First time logging this exercise.') + '</p>' +
+      '<div class="fields">' +
+        '<div><label for="f-reps">' + (isSec ? 'Seconds' : 'Reps') + '</label>' +
+        '<input id="f-reps" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="3" placeholder="0" value="' + esc(reps) + '"></div>' +
+        '<div><label for="f-weight">' + (item.weighted ? 'Weight per dumbbell' : 'Added weight') + '</label>' +
+        '<input id="f-weight" inputmode="decimal" autocomplete="off" maxlength="6" placeholder="' + (item.weighted ? '0' : 'Optional') + '" value="' + esc(weight) + '">' +
+        '<div class="seg" role="radiogroup" aria-label="Weight unit">' +
+          '<button role="radio" data-act="unit" data-unit="lbs" aria-checked="' + (unit === 'lbs') + '">lbs</button>' +
+          '<button role="radio" data-act="unit" data-unit="kg" aria-checked="' + (unit === 'kg') + '">kg</button>' +
+        '</div></div>' +
+      '</div>' +
+      '<p class="error" id="f-error" role="alert"></p>' +
+      '<div class="actions"><button class="btn2" data-act="close">Cancel</button>' +
+      '<button class="btn1" data-act="save">' + (existing ? 'Save changes' : 'Check off set') + '</button></div>' +
+      (existing ? '<button class="uncheck" data-act="uncheck">Uncheck this set</button>' : '')
+    );
+    var r = document.getElementById('f-reps');
+    r.focus();
+    if (reps) r.select();
+  }
+
+  function saveSet() {
+    if (!prompt) return;
+    var item = prompt.item;
+    var errEl = document.getElementById('f-error');
+    var reps = parseInt(document.getElementById('f-reps').value, 10);
+    if (!isFinite(reps) || reps <= 0) {
+      errEl.textContent = item.unit === 'sec' ? 'Enter how many seconds you held it.' : 'Enter how many reps you did.';
+      return;
+    }
+    var text = document.getElementById('f-weight').value.replace(',', '.').trim();
+    var w = 0;
+    if (text) {
+      w = Number(text);
+      if (!isFinite(w) || w < 0) { errEl.textContent = 'Weight must be a number, like 25 or 12.5.'; return; }
+    } else if (item.weighted) {
+      errEl.textContent = 'Enter the weight you used, per dumbbell.';
+      return;
+    }
+    var p = prompt;
+    if (state.lastUnit !== p.unit) {
+      state.lastUnit = p.unit;
+      state.unitUpdatedAt = Date.now();
+      schedulePush('settings');
+    }
+    closeDialog();
+    mutate(p.dayKey, p.item, function (e) { e.sets[p.idx] = { done: true, reps: reps, weight: w, unit: p.unit }; return e; });
+  }
+
+  function uncheckSet() {
+    if (!prompt) return;
+    var p = prompt;
+    closeDialog();
+    mutate(p.dayKey, p.item, function (e) { e.sets[p.idx] = { done: false }; e.done = false; return e; });
+  }
+
+  function confirmErase() {
+    openDialog(
+      '<h2 id="dlg-title">Erase all logged data?</h2>' +
+      '<p class="sub">Every checked set, rep and weight will be deleted.</p>' +
+      '<div class="actions"><button class="btn2" data-act="close">Cancel</button>' +
+      '<button class="btn1 danger" data-act="erase-yes">Erase</button></div>'
+    );
+  }
+
+  function eraseAll() {
+    var keys = Object.keys(state.logs);
+    state.logs = {};
+    saveLocal();
+    keys.forEach(function (k) { schedulePush(k); });
+    closeDialog();
+    render();
+    toast('All logged data erased.');
+  }
+
+  var toastEl = document.getElementById('toast'), toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3200);
+  }
+
+  /* ---------- Events ---------- */
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-act]');
+    if (!t) return;
+    var act = t.getAttribute('data-act');
+    var day = PLAN_BY_KEY[state.selected];
+    if (act === 'tab') { state.tab = t.getAttribute('data-tab'); render(); window.scrollTo(0, 0); return; }
+    if (act === 'select') { state.selected = t.getAttribute('data-key'); render(); return; }
+    if (act === 'close') { closeDialog(); return; }
+    if (act === 'save') { saveSet(); return; }
+    if (act === 'uncheck') { uncheckSet(); return; }
+    if (act === 'erase') { confirmErase(); return; }
+    if (act === 'erase-yes') { eraseAll(); return; }
+    if (act === 'unit' && prompt) {
+      prompt.unit = t.getAttribute('data-unit');
+      dialog.querySelectorAll('[data-act="unit"]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-unit') === prompt.unit)); });
+      return;
+    }
+    if (!day) return;
+    var item = day.items.filter(function (it) { return it.id === t.getAttribute('data-item'); })[0];
+    if (!item) return;
+    if (act === 'set') {
+      var idx = Number(t.getAttribute('data-idx'));
+      if (item.kind === 'lift') { openSetPrompt(day, item, idx); return; }
+      mutate(day.key, item, function (e) {
+        e.sets[idx] = e.sets[idx].done ? { done: false } : { done: true };
+        if (!e.sets[idx].done) e.done = false;
+        return e;
+      });
+      return;
+    }
+    if (act === 'item') {
+      var e = readEntry(day.key, item);
+      if (item.kind === 'check') {
+        var on = !e.done;
+        mutate(day.key, item, function (x) { return { sets: x.sets.map(function () { return { done: on }; }), done: on }; });
+        return;
+      }
+      if (e.done) { mutate(day.key, item, function (x) { x.done = false; return x; }); return; }
+      var left = e.sets.filter(function (s) { return !s.done; }).length;
+      if (left > 0) {
+        toast('Finish the sets first: ' + left + ' of ' + item.sets + ' ' + noun(item, item.sets) + ' still open on ' + item.name + '.');
+        return;
+      }
+      mutate(day.key, item, function (x) { x.done = true; return x; });
+    }
+  });
+
+  document.addEventListener('input', function (ev) {
+    if (ev.target.id === 'f-reps') ev.target.value = ev.target.value.replace(/[^0-9]/g, '');
+    if (ev.target.id === 'f-weight') ev.target.value = ev.target.value.replace(/[^0-9.,]/g, '');
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (!prompt) { if (ev.key === 'Escape') closeDialog(); return; }
+    if (ev.key === 'Escape') closeDialog();
+    if (ev.key === 'Enter') {
+      if (ev.target.id === 'f-reps') { ev.preventDefault(); document.getElementById('f-weight').focus(); }
+      else if (ev.target.id === 'f-weight') { ev.preventDefault(); saveSet(); }
+    }
+  });
+
+  /* ---------- Storage hooks ---------- */
+  function schedulePush() { /* local-only build: nothing to sync */ }
+
+  /* ---------- Start ---------- */
+  loadLocal();
+  render();
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* offline support unavailable */ });
+    });
+  }
+})();
+</script>
+</body>
+</html>
